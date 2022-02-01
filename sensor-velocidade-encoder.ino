@@ -23,7 +23,10 @@ void loop(){
     // intervalo de tempo entre a última passagem do furo e a atual (período)
     periodo = (tempo_sinal_atual - tempo_ultimo_sinal)/1000;
     // frequência em Hz = 1/periodo, frequencia em RPM = 60*frequência em Hz
-    frequencia = 60*(1/periodo);
+    // Além disso, verifica se o perído é diferente de zero, caso seja igual mantém a leitura passada
+    if(periodo != 0){
+      frequencia = 60*(1/periodo);
+    }
 
     // armazena as últimas medições para o cálculo seguinte
     tempo_ultimo_sinal = tempo_sinal_atual;
