@@ -1,40 +1,36 @@
-int pino_sensor = 8; // Pino digital utilizado pelo sensor
-int sinal = 0;
-int ultimo_sinal = 0;
-double tempo_ultimo_sinal = 0;
-float periodo = 0; // [ms]
-float frequencia = 0; // [RPM]
+int pino_sensor = 2; // Pino digital utilizado pelo sensor
+volatile double tempo_ultimo_sinal = 0;
+volatile float frequencia = 0; // [RPM]
 
 void setup(){  
   Serial.begin(9600);
-  pinMode(pino_sensor, INPUT); // Define o pino como entrada
-  Serial.println("Periodo,Frequencia,tempo");
+  Serial.println("Frequencia,tempo");
+  attachInterrupt(digitalPinToInterrupt(pino_sensor), calculo_frequencia, RISING);
 }  
-   
-void loop(){
-  // lê o sinal atual do sensor
-  sinal = digitalRead(pino_sensor);
 
-  // se houve uma mudança (tá em furo), significa que houve um ciclo, logo calcula o período e a frequência
-  if(sinal != ultimo_sinal){
-    // tempo atual do arduino
-    float tempo_sinal_atual = millis();
-
-    // intervalo de tempo entre a última passagem do furo e a atual (período)
-    periodo = (tempo_sinal_atual - tempo_ultimo_sinal);
-    // frequência em Hz = 1/periodo, frequencia em RPM = 60*frequência em Hz
-    // Além disso, verifica se o perído é diferente de zero, caso seja igual mantém a leitura passada
-    if(periodo != 0){
-      frequencia = 60*(1000/periodo);
-    }
-
-    // armazena as últimas medições para o cálculo seguinte
-    tempo_ultimo_sinal = tempo_sinal_atual;
-    ultimo_sinal = sinal;
-    Serial.print(periodo);
-    Serial.print(",");
-    Serial.print(frequencia);
-    Serial.print(",");
-    Serial.println(tempo_sinal_atual);
+volatile unsigned long int TempoRPM = 0; // Tempo do último pulso
+volatile unsigned long int RPM = 0;
+void calculo_frequencia() 
+{
+  /*
+      Para calcular a frequencia é feita a seguinte fórmula:
+              frequencia = (1 / Período) * 1000 * 60
+      No nosso caso o período e dado pelo tempo entre os dois pulsos e que sai em milissegundos.
+      Sendo assim, para poder achar o RPM precisamos multiplicar por 1000 e depois por 60.
+   */
+  float frequencia_ = 60000/(millis()- TempoRPM);
+  
+  if(frequencia_ < 10000 && frequencia_ > 0){
+     frequencia = frequencia_;
   }
+  
+  TempoRPM = millis();
+  Serial.print(frequencia);
+  Serial.print(",");
+  Serial.println(TempoRPM);
+
+}
+
+void loop(){
+
 }
